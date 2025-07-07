@@ -36,10 +36,10 @@ jobs:
 
       - name: Test Azure Storage access
         run: |
-          az login --service-principal -u $CLIENT_ID -p $CLIENT_SECRET --tenant $TENANT_ID
+          az login --service-principal -u $APP_ID -p $CLIENT_SECRET --tenant $TENANT_ID
           az storage container list --account-name tfstorage1account1devops --auth-mode login
         env:
-          CLIENT_ID: ${{ secrets.CLIENT_ID }}
+          APP_ID: ${{ secrets.APP_ID }}
           CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
           TENANT_ID: ${{ secrets.TENANT_ID }}
 
