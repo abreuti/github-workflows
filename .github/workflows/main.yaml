@@ -34,14 +34,14 @@ jobs:
         run: |
           curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash    
 
-      - name: Test Azure Storage access
-        run: |
-          az login --service-principal -u $APP_ID -p $CLIENT_SECRET --tenant $TENANT_ID
-          az storage container list --account-name tfstorage1account1devops --auth-mode login
-        env:
-          APP_ID: ${{ secrets.APP_ID }}
-          CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
-          TENANT_ID: ${{ secrets.TENANT_ID }}
+      #- name: Test Azure Storage access
+      #  run: |
+      #   az login --service-principal -u $APP_ID -p $CLIENT_SECRET --tenant $TENANT_ID
+      #   az storage container list --account-name tfstorage1account1devops --auth-mode login
+      #  env:
+      #    APP_ID: ${{ secrets.APP_ID }}
+      #    CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+      #    TENANT_ID: ${{ secrets.TENANT_ID }}
 
       - name: Terraform Init
         run: terraform init
