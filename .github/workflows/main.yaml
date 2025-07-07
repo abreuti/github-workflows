@@ -45,6 +45,11 @@ jobs:
         run: tflint --recursive
         working-directory: terraform
 
+      - name: Run tfsec (Terraform security scanner)
+        uses: aquasecurity/tfsec-action@v1
+        with:
+          directory: terraform
+
       - name: Terraform Init
         run: terraform init
         working-directory: terraform
