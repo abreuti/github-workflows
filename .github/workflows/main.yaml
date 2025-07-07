@@ -30,6 +30,19 @@ jobs:
         with:
           terraform_version: 1.5.7  
 
+      - name: Install Azure CLI
+        run: |
+          curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash    
+
+      - name: Test Azure Storage access
+        run: |
+          az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID
+          az storage container list --account-name tfstorage1account1devops --auth-mode login
+        env:
+          ARM_CLIENT_ID: ${{ secrets.CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+          ARM_TENANT_ID: ${{ secrets.ATENANT_ID }}
+
       - name: Terraform Init
         run: terraform init
         working-directory: terraform
