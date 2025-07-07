@@ -1,0 +1,56 @@
+name: Terraform Workflow
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 1.12.2
+
+  terraform:
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Terraform Init
+        run: terraform init
+        working-directory: ../../terraform
+
+      - name: Terraform Validate
+        run: terraform validate
+        working-directory: ../../terraform
+
+      - name: Terraform Plan
+        run: terraform plan -var="client_id=${{ secrets.CLIENT_ID }}" -var="client_secret=${{ secrets.CLIENT_SECRET }}" -var="tenant_id=${{ secrets.TENANT_ID }}" -var="subscription_id=${{ secrets.SUBSCRIPTION_ID }}" -var="admin_password=${{ secrets.ADMIN_PASSWORD }}" -out=tfplan
+        working-directory: ../../terraform
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve tfplan
+        working-directory: ../../terraform
+
+  destroy:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Terraform Init
+        run: terraform init
+        working-directory: ./workspaces/ubuntu/.devcontainer/my-projects/devops/infra
+
+      - name: Terraform Destroy
+        run: terraform destroy -auto-approve -var="client_id=${{ secrets.CLIENT_ID }}" -var="client_secret=${{ secrets.CLIENT_SECRET }}" -var="tenant_id=${{ secrets.TENANT_ID }}" -var="subscription_id=${{ secrets.SUBSCRIPTION_ID }}" -var="admin_password=${{ secrets.ADMIN_PASSWORD }}"
+        working-directory: ./workspaces/ubuntu/.devcontainer/my-projects/devops/infra
