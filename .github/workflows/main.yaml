@@ -49,8 +49,8 @@ jobs:
 
       - name: Terraform Init
         run: terraform init
-        working-directory: ./workspaces/ubuntu/.devcontainer/my-projects/devops/infra
+        working-directory: ../../terraform
 
       - name: Terraform Destroy
         run: terraform destroy -auto-approve -var="client_id=${{ secrets.CLIENT_ID }}" -var="client_secret=${{ secrets.CLIENT_SECRET }}" -var="tenant_id=${{ secrets.TENANT_ID }}" -var="subscription_id=${{ secrets.SUBSCRIPTION_ID }}" -var="admin_password=${{ secrets.ADMIN_PASSWORD }}"
-        working-directory: ./workspaces/ubuntu/.devcontainer/my-projects/devops/infra
+        working-directory: ../../terraform
