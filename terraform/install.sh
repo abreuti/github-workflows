@@ -30,3 +30,12 @@ sudo chmod +x /usr/local/bin/docker-compose
 # Teste (opcional)
 docker --version
 docker-compose --version
+
+# Instala ngrok
+NGROK_VERSION="3.13.1"
+curl -s https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v${NGROK_VERSION}-linux-amd64.tgz | tar -xz
+sudo mv ngrok /usr/local/bin
+
+# Configura ngrok com token recebido como argumento
+ngrok config add-authtoken "$1"
+

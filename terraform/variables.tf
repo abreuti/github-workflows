@@ -41,3 +41,15 @@ variable "tenant_id" {
   description = "Tenant ID do Azure AD"
   type        = string
 }
+
+variable "ngrok_token" {
+  description = "ngrok auth token"
+  type        = string
+  sensitive   = true
+}
+
+variable "admin_ssh_key" {
+  description = "Chave SSH do usuário admin"
+  type        = string
+  sensitive   = true
+}

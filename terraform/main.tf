@@ -110,7 +110,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
 
   admin_ssh_key {
     username   = "azureuser"
-    public_key = file("~/.ssh/id_rsa.pub")
+    public_key = var.admin_ssh_key
   }
 
   provisioner "file" {
@@ -139,17 +139,18 @@ resource "azurerm_linux_virtual_machine" "vm" {
   }
 
   provisioner "remote-exec" {
-    inline = [
-      "chmod +x ~/install.sh ~/start.sh",
-      "sudo ~/install.sh",
-      "bash ~/start.sh"
-    ]
-  }
+  inline = [
+    "chmod +x ~/install.sh ~/start.sh",
+    "sudo ~/install.sh ${var.ngrok_token}",
+    "bash ~/start.sh"
+  ]
+}
 
-  connection {
-    type        = "ssh"
-    user        = "azureuser"
-    private_key = file("~/.ssh/id_rsa")
-    host        = azurerm_public_ip.public_ip.ip_address
-  }
+
+connection {
+  type        = "ssh"
+  user        = "azureuser"
+  private_key = var.admin_ssh_key
+  host        = azurerm_public_ip.public_ip_address
+}
 }
