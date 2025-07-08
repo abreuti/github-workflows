@@ -137,10 +137,11 @@ resource "azurerm_linux_virtual_machine" "vm" {
   provisioner "remote-exec" {
   inline = [
     "chmod +x ~/install.sh ~/start.sh",
-    "sudo ~/install.sh ${var.ngrok_token}",
-    "bash ~/start.sh"
+    "sudo ~/install.sh ${var.ngrok_token} > ~/install.log 2>&1 || (echo 'Erro no install.sh:'; cat ~/install.log; exit 1)",
+    "bash ~/start.sh > ~/start.log 2>&1 || (echo 'Erro no start.sh:'; cat ~/start.log; exit 1)"
   ]
 }
+
 
 
 connection {
