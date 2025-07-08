@@ -147,6 +147,6 @@ connection {
   type        = "ssh"
   user        = "azureuser"
   private_key = var.admin_private_ssh_key
-  host        = azurerm_public_ip.public_ip_address
+  host        = azurerm_public_ip.public_ip.ip_address
 }
 }
