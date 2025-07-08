@@ -4,7 +4,7 @@ provider "azurerm" {
 
 resource "azurerm_resource_group" "rg" {
   name     = "rg-monitoring"
-  location = "East US"
+  location = var.location
 }
 
 resource "azurerm_virtual_network" "vnet" {
@@ -110,7 +110,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
 
   admin_ssh_key {
     username   = "azureuser"
-    public_key = var.admin_ssh_key
+    public_key = var.admin_public_ssh_key
   }
 
   provisioner "file" {
@@ -150,7 +150,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
 connection {
   type        = "ssh"
   user        = "azureuser"
-  private_key = var.admin_ssh_key
+  private_key = var.admin_private_ssh_key
   host        = azurerm_public_ip.public_ip_address
 }
 }

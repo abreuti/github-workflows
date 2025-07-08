@@ -69,10 +69,11 @@ jobs:
             -var="client_secret=${{ secrets.CLIENT_SECRET }}" \
             -var="tenant_id=${{ secrets.TENANT_ID }}" \
             -var="subscription_id=${{ secrets.SUBSCRIPTION_ID }}" \
-            -var="admin_password=${{ secrets.ADMIN_PASSWORD }}" \
             -var="ngrok_token=${{ secrets.NGROK_AUTHTOKEN }}" \
-            -var="admin_ssh_key=${{ secrets.ADMIN_SSH_KEY }}" \
+            -var="admin_public_ssh_key=${{ secrets.ADMIN_PUBLIC_SSH_KEY }}" \
+            -var="admin_private_ssh_key=${{ secrets.ADMIN_PRIVATE_SSH_KEY }}" \
             -out=tfplan
+
         working-directory: terraform
 
       - name: Terraform Apply
@@ -111,7 +112,8 @@ jobs:
             -var="client_secret=${{ secrets.CLIENT_SECRET }}" \
             -var="tenant_id=${{ secrets.TENANT_ID }}" \
             -var="subscription_id=${{ secrets.SUBSCRIPTION_ID }}" \
-            -var="admin_password=${{ secrets.ADMIN_PASSWORD }}" \
             -var="ngrok_token=${{ secrets.NGROK_AUTHTOKEN }}" \
-            -var="admin_ssh_key=${{ secrets.ADMIN_SSH_KEY }}"
+            -var="admin_public_ssh_key=${{ secrets.ADMIN_PUBLIC_SSH_KEY }}" \
+            -var="admin_private_ssh_key=${{ secrets.ADMIN_PRIVATE_SSH_KEY }}"
+            
         working-directory: terraform

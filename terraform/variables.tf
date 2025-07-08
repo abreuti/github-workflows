@@ -13,11 +13,11 @@ variable "location" {
 }
 
 # Senha do usuário admin da VM. Deve ser fornecida via variável segura no pipeline
-variable "admin_password" {
-  description = "Senha do usuário admin"
-  type        = string
-  sensitive   = true
-}
+#variable "admin_password" {
+#  description = "Senha do usuário admin"
+#  type        = string
+#  sensitive   = true
+#}
 
 # Dados de autenticação do Azure, vindos do Service Principal
 
@@ -48,8 +48,14 @@ variable "ngrok_token" {
   sensitive   = true
 }
 
-variable "admin_ssh_key" {
-  description = "Chave SSH do usuário admin"
+variable "admin_private_ssh_key" {
+  description = "Chave SSH Privada do usuário admin"
+  type        = string
+  sensitive   = true
+}
+
+variable "admin_public_ssh_key" {
+  description = "Chave SSH Publica do usuário admin"
   type        = string
   sensitive   = true
 }
