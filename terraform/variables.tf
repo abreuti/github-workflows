@@ -12,6 +12,13 @@ variable "location" {
   default     = "East US"
 }
 
+# Nome da Virtual Network a ser criada
+variable "virtual_network_name" {
+  description = "Nome da Virtual Network"
+  type        = string
+  default     = "vnet-devops"
+}
+
 # Senha do usuário admin da VM. Deve ser fornecida via variável segura no pipeline
 #variable "admin_password" {
 #  description = "Senha do usuário admin"
