@@ -57,40 +57,60 @@ jobs:
         run: terraform workspace select $TERRAFORM_WORKSPACE || terraform workspace new $TERRAFORM_WORKSPACE
         working-directory: terraform
 
+      - name: Terraform Validate
+        run: terraform validate
+        working-directory: terraform
+
       - name: Terraform Plan
         run: |
-          mkdir -p terraform/logs
-          touch terraform/logs/plan.log
           terraform plan \
             -var="client_id=${{ secrets.CLIENT_ID }}" \
             -var="client_secret=${{ secrets.CLIENT_SECRET }}" \
             -var="tenant_id=${{ secrets.TENANT_ID }}" \
             -var="subscription_id=${{ secrets.SUBSCRIPTION_ID }}" \
-            -out=tfplan 2>&1 | tee terraform/logs/plan.log
-        working-directory: terraform
-        continue-on-error: true
-
-      - name: Terraform Apply
-        run: |
-          touch terraform/logs/apply.log
-          terraform apply -auto-approve tfplan 2>&1 | tee terraform/logs/apply.log
+            -var="ngrok_token=${{ secrets.NGROK_AUTHTOKEN }}" \
+            -var="admin_public_ssh_key=${{ secrets.ADMIN_PUBLIC_SSH_KEY }}" \
+            -var="admin_private_ssh_key=${{ secrets.ADMIN_PRIVATE_SSH_KEY }}" \
+            -out=tfplan | tee terraform/plan.log
           exit_code=${PIPESTATUS[0]}
           exit $exit_code
         working-directory: terraform
         continue-on-error: true
 
+      - name: Terraform Apply
+        run: |
+          terraform apply -auto-approve tfplan | tee terraform/apply.log
+          exit_code=${PIPESTATUS[0]}
+          exit $exit_code
+        working-directory: terraform
+        continue-on-error: true
+
+      - name: Unir logs do Plan e Apply
+        if: always()
+        run: |
+          cat terraform/plan.log > terraform/final.log || true
+          echo -e "\n\n========== APPLY LOG ==========\n" >> terraform/final.log
+          cat terraform/apply.log >> terraform/final.log || true
+
       - name: Upload logs (always)
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: terraform-logs
-          path: terraform/logs/
-          if-no-files-found: ignore
+          name: terraform-final-log
+          path: terraform/final.log
 
-      - name: Diagnóstico IA via Groq (se falhar)
+      - name: Ler log final para IA
+        id: read_log
         if: failure()
-        id: diagnosis
+        run: |
+          echo "apply_log<<EOF" >> $GITHUB_OUTPUT
+          head -n 1000 terraform/final.log >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Diagnóstico IA via Groq
+        if: failure()
         uses: rajsinghparihar/llm-code-review@v0.0.1-groq
+        id: diagnosis
         with:
           apiKey: ${{ secrets.GROQ_API_KEY }}
           githubToken: ${{ secrets.GITHUB_TOKEN }}
@@ -100,19 +120,8 @@ jobs:
           temperature: "0.2"
           maxNewTokens: "256"
           logLevel: "DEBUG"
-          pullRequestDiff: |
-            ${{ steps.read_log.outputs.combined_log }}
+          pullRequestDiff: "${{ steps.read_log.outputs.apply_log }}"
           githubPullRequestNumber: ${{ github.event.pull_request.number || 0 }}
-
-      - name: Ler conteúdo dos logs para input IA
-        id: read_log
-        if: failure()
-        run: |
-          echo "combined_log<<EOF" >> $GITHUB_OUTPUT
-          cat terraform/logs/plan.log | head -n 500 >> $GITHUB_OUTPUT
-          echo "----" >> $GITHUB_OUTPUT
-          cat terraform/logs/apply.log | head -n 500 >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Postar comentário no PR com análise IA
         if: failure() && github.event_name == 'pull_request'
@@ -121,6 +130,8 @@ jobs:
         run: |
           PR_NUMBER=${{ github.event.pull_request.number }}
           COMMENT_BODY="🧠 **Diagnóstico automático do erro no Terraform** 🧠\n\n${{ steps.diagnosis.outputs.review }}"
+          echo "Comentando no PR #$PR_NUMBER"
+          gh auth setup-git
           gh pr comment $PR_NUMBER --body "$COMMENT_BODY"
 
   destroy:
