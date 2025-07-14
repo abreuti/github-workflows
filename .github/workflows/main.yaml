@@ -171,5 +171,8 @@ jobs:
         if: steps.check_locks.outputs.has_lock == 'true' && github.event_name == 'workflow_dispatch'
         run: |
           echo "Attempting to force unlock ALL Terraform state locks..."
-          terraform force-unlock -all
+          terraform force-unlock -all || {
+            echo "Error: Unable to force unlock Terraform state locks."
+            exit 1
+          }
         working-directory: terraform

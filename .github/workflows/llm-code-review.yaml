@@ -11,9 +11,9 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pull-requests: write # <-- Adicione esta linha (ou altere de read para write)
-      # Ou, mais abrangente:
-      # issues: write # <-- Essa também funcionaria, pois comentários em PRs são tecnicamente comentários em issues
+      pull-requests: write 
+      issues: write  
+
     steps:
       - name: Run RepoFixAI
         uses: Manav916/llm-code-review@main
