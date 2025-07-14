@@ -109,7 +109,10 @@ jobs:
         id: read_log
         if: failure()
         run: |
-          echo "::set-output name=apply_log::$(cat terraform/apply.log | head -n 1000)"
+          echo "apply_log<<EOF" >> $GITHUB_OUTPUT
+          head -n 1000 terraform/apply.log >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
           
       # Opcional: postar comentário no PR com a análise IA
       - name: Postar comentário no PR com análise IA
