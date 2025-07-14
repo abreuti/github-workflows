@@ -31,4 +31,5 @@ jobs:
           temperature: "0.2"
           maxNewTokens: "256"
           logLevel: "DEBUG"
-          pullRequestDiff: "" # vazio porque não é PR
+          pullRequestDiff: ""
+          githubPullRequestNumber: 0 
