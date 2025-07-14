@@ -76,14 +76,14 @@ jobs:
             -var="ngrok_token=${{ secrets.NGROK_AUTHTOKEN }}" \
             -var="admin_public_ssh_key=${{ secrets.ADMIN_PUBLIC_SSH_KEY }}" \
             -var="admin_private_ssh_key=${{ secrets.ADMIN_PRIVATE_SSH_KEY }}" \
-            -out=tfplan | tee terraform/plan.log
+            -out=tfplan
           exit_code=${PIPESTATUS[0]}
           exit $exit_code
         working-directory: terraform
 
       - name: Terraform Apply
         run: |
-          terraform apply -auto-approve tfplan | tee terraform/apply.log
+          terraform apply -auto-approve tfplan
           exit_code=${PIPESTATUS[0]}
           exit $exit_code
         working-directory: terraform
