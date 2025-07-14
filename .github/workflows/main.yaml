@@ -16,7 +16,7 @@ on:
           - destroy
 
 env:
-  TERRAFORM_VERSION: 1.5.7
+  TERRAFORM_VERSION: 1.12.0
 
 jobs:
   terraform:
@@ -30,6 +30,11 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Code Review
+        uses: ./.github/workflows/test_ia.yaml
+        with:
+          directory: 'terraform'
 
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v3
