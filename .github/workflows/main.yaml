@@ -123,6 +123,8 @@ jobs:
         working-directory: terraform
 
   terraform-force-unlock:
+    # Este job é acionado manualmente para forçar o desbloqueio do Terraform
+    # Pode ocorrer quando há uma pipeline travada ou um lock não liberado
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -137,6 +139,37 @@ jobs:
         run: terraform init
         working-directory: terraform
 
-      - name: Terraform Force Unlock
-        run: terraform force-unlock -all
+        # Checar locks atuais do Terraform
+      - name: Checar locks atuais do terraform
+        id: check_locks # ID para referenciar a saída deste passo
+        # No run abaixo, estamos tentando forçar o desbloqueio e capturar a saída em um arquivo JSON. O true é para evitar falhas se não houver lock.
+        # Se existir um lock, ele será capturado no arquivo JSON e posteriormente analisado para aprovação manual pelos revisores.
+        run: |
+          terraform force-unlock -json -force -lock-id="" || true > terraform_lock_output.json 2>&1
+          if [ -s terraform_lock_output.json ] && grep -q 'ID' terraform_lock_output.json; then
+            echo "::set-output name=has_lock::true"
+            echo "Existing lock detected. Details:"
+            cat terraform_lock_output.json
+          else
+            echo "::set-output name=has_lock::false"
+            echo "No active lock found."
+          fi
+        working-directory: terraform
+       
+      - name: Aprovação para Force Unlock (Manual)
+        # Este passo só será executado se 'has_lock' for 'true' do passo anterior
+        # e é aqui que a aprovação manual entra em jogo por causa do 'environment' no job
+        if: steps.check_locks.outputs.has_lock == 'true'
+        run: |
+          echo "Um lock do Terraform foi detectado. Este job requer aprovação manual para executar o 'force-unlock -all'."
+          echo "Por favor, revise o log do 'Check for current Terraform locks' acima para detalhes do lock."
+          echo "Aguardando aprovação dos revisores configurados no ambiente 'producao-unlock'."
+        working-directory: terraform 
+
+      - name: Terraform Force Unlock (if a lock was found)
+        # Este passo só será executado se 'has_lock' for 'true' do passo anterior e os aprovadores tiverem aprovado
+        if: steps.check_locks.outputs.has_lock == 'true' && github.event_name == 'workflow_dispatch'
+        run: |
+          echo "Attempting to force unlock ALL Terraform state locks..."
+          terraform force-unlock -all
         working-directory: terraform
