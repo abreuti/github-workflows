@@ -40,11 +40,6 @@ jobs:
         with:
           terraform_version: ${{ env.TERRAFORM_VERSION }}
 
-      - name: Prepare log directory
-        run: |
-          mkdir -p terraform/logs
-          touch terraform/logs/plan.log terraform/logs/apply.log
-
       - name: Set up TFLint
         uses: terraform-linters/setup-tflint@v4
         with:
@@ -125,4 +120,23 @@ jobs:
             -var="ngrok_token=${{ secrets.NGROK_AUTHTOKEN }}" \
             -var="admin_public_ssh_key=${{ secrets.ADMIN_PUBLIC_SSH_KEY }}" \
             -var="admin_private_ssh_key=${{ secrets.ADMIN_PRIVATE_SSH_KEY }}"
+        working-directory: terraform
+
+  terraform-force-unlock:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+
+      - name: Terraform Init
+        run: terraform init
+        working-directory: terraform
+
+      - name: Terraform Force Unlock
+        run: terraform force-unlock -all
         working-directory: terraform
