@@ -77,7 +77,8 @@ jobs:
       - name: Terraform Apply
         run: |
           terraform apply -auto-approve tfplan | tee terraform/apply.log
-          test ${PIPESTATUS[0]} -eq 0
+          exit_code=${PIPESTATUS[0]}
+          exit $exit_code
         working-directory: terraform
         continue-on-error: true
 
@@ -87,6 +88,14 @@ jobs:
         with:
           name: terraform-apply-log
           path: terraform/apply.log
+
+      - name: Ler conteúdo do log para input IA
+        id: read_log
+        if: failure()
+        run: |
+          echo "apply_log<<EOF" >> $GITHUB_OUTPUT
+          head -n 1000 terraform/apply.log >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Diagnóstico IA via Groq (só se falhar)
         if: failure()
@@ -101,30 +110,16 @@ jobs:
           temperature: "0.2"
           maxNewTokens: "256"
           logLevel: "DEBUG"
-          pullRequestDiff: |
-            ${{ steps.read_log.outputs.apply_log }}
+          pullRequestDiff: "${{ steps.read_log.outputs.apply_log }}"
           githubPullRequestNumber: ${{ github.event.pull_request.number || 0 }}
 
-      - name: Ler conteúdo do log para input IA
-        id: read_log
-        if: failure()
-        run: |
-          echo "apply_log<<EOF" >> $GITHUB_OUTPUT
-          head -n 1000 terraform/apply.log >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
-          
-      # Opcional: postar comentário no PR com a análise IA
       - name: Postar comentário no PR com análise IA
         if: failure() && github.event_name == 'pull_request'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           PR_NUMBER=${{ github.event.pull_request.number }}
-          COMMENT_BODY="🧠 **Diagnóstico automático do erro no Terraform** 🧠
-
-          ${{ steps.diagnosis.outputs.review }}"
-
+          COMMENT_BODY="🧠 **Diagnóstico automático do erro no Terraform** 🧠\n\n${{ steps.diagnosis.outputs.review }}"
           echo "Comentando no PR #$PR_NUMBER"
           gh auth setup-git
           gh pr comment $PR_NUMBER --body "$COMMENT_BODY"
@@ -161,7 +156,7 @@ jobs:
           terraform destroy -auto-approve \
             -var="client_id=${{ secrets.CLIENT_ID }}" \
             -var="client_secret=${{ secrets.CLIENT_SECRET }}" \
-            -var="tenant_id=${{ secrets.TERRAFORM_WORKSPACE }}" \
+            -var="tenant_id=${{ secrets.TENANT_ID }}" \
             -var="subscription_id=${{ secrets.SUBSCRIPTION_ID }}" \
             -var="ngrok_token=${{ secrets.NGROK_AUTHTOKEN }}" \
             -var="admin_public_ssh_key=${{ secrets.ADMIN_PUBLIC_SSH_KEY }}" \
