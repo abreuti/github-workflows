@@ -108,6 +108,13 @@ jobs:
             -out=tfplan
         working-directory: terraform
 
+      - name: Upload logs (always)
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: terraform-apply-log
+          path: terraform/apply.log
+
       - name: Terraform Apply
         run: terraform apply -auto-approve tfplan
         working-directory: terraform
