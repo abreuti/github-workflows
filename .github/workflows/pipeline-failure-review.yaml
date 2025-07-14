@@ -20,7 +20,7 @@ jobs:
           echo "Branch: ${{ github.event.workflow_run.head_branch }}"
           echo "Commit: ${{ github.event.workflow_run.head_sha }}"
 
-      - name: Diagnóstico IA
+      - name: Diagnóstico IA via Groq
         uses: rajsinghparihar/llm-code-review@v0.0.1-groq
         with:
           apiKey: ${{ secrets.GROQ_API_KEY }}
@@ -31,3 +31,4 @@ jobs:
           temperature: "0.2"
           maxNewTokens: "256"
           logLevel: "DEBUG"
+          pullRequestDiff: "" # vazio porque não é PR
