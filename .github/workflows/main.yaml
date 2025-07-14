@@ -40,6 +40,11 @@ jobs:
         with:
           terraform_version: ${{ env.TERRAFORM_VERSION }}
 
+      - name: Prepare log directory
+        run: |
+          mkdir -p terraform/logs
+          touch terraform/logs/plan.log terraform/logs/apply.log
+
       - name: Set up TFLint
         uses: terraform-linters/setup-tflint@v4
         with:
