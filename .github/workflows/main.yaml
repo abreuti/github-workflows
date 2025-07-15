@@ -62,6 +62,12 @@ jobs:
         run: terraform fmt -check -diff
         working-directory: terraform
 
+      - name: Terraform Checkov Scan
+        uses: bridgecrewio/checkov-action@v2
+        with:
+          directory: terraform
+          skip_checks: CKV_AZURE_123,CKV_AZURE_124,CKV_AZURE_125,CKV_AZURE_126,CKV_AZURE_127,CKV_AZURE_128,CKV_AZURE_129,CKV_AZURE_130,CKV_AZURE_131,CKV_AZURE_132,CKV_AZURE_133,CKV_AZURE_134
+
       - name: Select or Create Workspace
         run: terraform workspace select $TERRAFORM_WORKSPACE || terraform workspace new $TERRAFORM_WORKSPACE
         working-directory: terraform
