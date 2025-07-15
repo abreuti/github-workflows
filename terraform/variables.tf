@@ -49,11 +49,11 @@ variable "tenant_id" {
   type        = string
 }
 
-variable "ngrok_token" {
-  description = "ngrok auth token"
-  type        = string
-  sensitive   = true
-}
+#variable "ngrok_token" {
+#  description = "ngrok auth token"
+#  type        = string
+#  sensitive   = true
+#}
 
 variable "admin_private_ssh_key" {
   description = "Chave SSH Privada do usuário admin"
