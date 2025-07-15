@@ -89,8 +89,8 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'destroy'
     env:
-      TERRAFORM_VERSION: 1.12.0
-      TERRAFORM_WORKSPACE: dev
+      TERRAFORM_VERSION: ${ env.TERRAFORM_VERSION }
+      TERRAFORM_WORKSPACE: ${ env.TERRAFORM_WORKSPACE }
       ARM_CLIENT_ID: ${{ secrets.CLIENT_ID }}
       ARM_CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
       ARM_TENANT_ID: ${{ secrets.TENANT_ID }}
@@ -129,6 +129,13 @@ jobs:
     # Pode ocorrer quando há uma pipeline travada ou um lock não liberado
     runs-on: ubuntu-latest
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'unlock_tfstate'
+    env:
+      TERRAFORM_VERSION: ${ env.TERRAFORM_VERSION }
+      TERRAFORM_WORKSPACE: ${ env.TERRAFORM_WORKSPACE }
+      ARM_CLIENT_ID: ${{ secrets.CLIENT_ID }}
+      ARM_CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+      ARM_TENANT_ID: ${{ secrets.TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.SUBSCRIPTION_ID }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
