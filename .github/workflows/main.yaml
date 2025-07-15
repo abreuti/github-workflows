@@ -17,6 +17,8 @@ on:
         options:
           - apply
           - destroy
+          - unlock_tfstate
+
 
 env:
   TERRAFORM_VERSION: 1.12.0
@@ -126,6 +128,7 @@ jobs:
     # Este job é acionado manualmente para forçar o desbloqueio do Terraform
     # Pode ocorrer quando há uma pipeline travada ou um lock não liberado
     runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'unlock_tfstate'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
