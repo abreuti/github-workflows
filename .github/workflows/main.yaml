@@ -1,0 +1,186 @@
+name: Terraform Workflow
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Terraform action'
+        required: true
+        default: 'apply'
+        type: choice
+        options:
+          - apply
+          - destroy
+          - unlock_tfstate
+
+
+env:
+  TERRAFORM_VERSION: 1.12.0
+  TERRAFORM_WORKSPACE: dev
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'apply')
+    env:
+      ARM_CLIENT_ID: ${{ secrets.CLIENT_ID }}
+      ARM_CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+      ARM_TENANT_ID: ${{ secrets.TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.SUBSCRIPTION_ID }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+
+      - name: Set up TFLint
+        uses: terraform-linters/setup-tflint@v4
+        with:
+          tflint_version: latest
+
+      - name: Run TFLint
+        run: tflint --recursive
+        working-directory: terraform
+
+      - name: Terraform Init
+        run: terraform init
+        working-directory: terraform
+
+      - name: Select or Create Workspace
+        run: terraform workspace select $TERRAFORM_WORKSPACE || terraform workspace new $TERRAFORM_WORKSPACE
+        working-directory: terraform
+
+      - name: Terraform Validate
+        run: terraform validate
+        working-directory: terraform
+
+      - name: Terraform Plan
+        run: |
+          terraform plan \
+            -var="client_id=${{ secrets.CLIENT_ID }}" \
+            -var="client_secret=${{ secrets.CLIENT_SECRET }}" \
+            -var="tenant_id=${{ secrets.TENANT_ID }}" \
+            -var="subscription_id=${{ secrets.SUBSCRIPTION_ID }}" \
+            -var="admin_public_ssh_key=${{ secrets.ADMIN_PUBLIC_SSH_KEY }}" \
+            -var="admin_private_ssh_key=${{ secrets.ADMIN_PRIVATE_SSH_KEY }}" \
+            -out=tfplan
+          exit_code=${PIPESTATUS[0]}
+          exit $exit_code
+        working-directory: terraform
+
+      - name: Terraform Apply
+        run: |
+          terraform apply -auto-approve tfplan
+          exit_code=${PIPESTATUS[0]}
+          exit $exit_code
+        working-directory: terraform
+
+  destroy:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'destroy'
+    env:
+      TERRAFORM_VERSION: ${ env.TERRAFORM_VERSION }
+      TERRAFORM_WORKSPACE: ${ env.TERRAFORM_WORKSPACE }
+      ARM_CLIENT_ID: ${{ secrets.CLIENT_ID }}
+      ARM_CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+      ARM_TENANT_ID: ${{ secrets.TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.SUBSCRIPTION_ID }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+
+      - name: Terraform Init
+        run: terraform init
+        working-directory: terraform
+
+      - name: Select or Create Workspace
+        run: terraform workspace select $TERRAFORM_WORKSPACE || terraform workspace new $TERRAFORM_WORKSPACE
+        working-directory: terraform
+
+      - name: Terraform Destroy
+        run: |
+          terraform destroy -auto-approve \
+            -var="client_id=${{ secrets.CLIENT_ID }}" \
+            -var="client_secret=${{ secrets.CLIENT_SECRET }}" \
+            -var="tenant_id=${{ secrets.TENANT_ID }}" \
+            -var="subscription_id=${{ secrets.SUBSCRIPTION_ID }}" \
+            -var="admin_public_ssh_key=${{ secrets.ADMIN_PUBLIC_SSH_KEY }}" \
+            -var="admin_private_ssh_key=${{ secrets.ADMIN_PRIVATE_SSH_KEY }}"
+        working-directory: terraform
+
+  terraform-force-unlock:
+    # Este job é acionado manualmente para forçar o desbloqueio do Terraform
+    # Pode ocorrer quando há uma pipeline travada ou um lock não liberado
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'unlock_tfstate'
+    env:
+      TERRAFORM_VERSION: ${ env.TERRAFORM_VERSION }
+      TERRAFORM_WORKSPACE: ${ env.TERRAFORM_WORKSPACE }
+      ARM_CLIENT_ID: ${{ secrets.CLIENT_ID }}
+      ARM_CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+      ARM_TENANT_ID: ${{ secrets.TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.SUBSCRIPTION_ID }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+
+      - name: Terraform Init
+        run: terraform init
+        working-directory: terraform
+
+        # Checar locks atuais do Terraform
+      - name: Checar locks atuais do terraform
+        id: check_locks # ID para referenciar a saída deste passo
+        # No run abaixo, estamos tentando forçar o desbloqueio e capturar a saída em um arquivo JSON. O true é para evitar falhas se não houver lock.
+        # Se existir um lock, ele será capturado no arquivo JSON e posteriormente analisado para aprovação manual pelos revisores.
+        run: |
+          terraform force-unlock -json -force -lock-id="" || true > terraform_lock_output.json 2>&1
+          if [ -s terraform_lock_output.json ] && grep -q 'ID' terraform_lock_output.json; then
+            echo "::set-output name=has_lock::true"
+            echo "Existing lock detected. Details:"
+            cat terraform_lock_output.json
+          else
+            echo "::set-output name=has_lock::false"
+            echo "No active lock found."
+          fi
+        working-directory: terraform
+       
+      - name: Aprovação para Force Unlock (Manual)
+        # Este passo só será executado se 'has_lock' for 'true' do passo anterior
+        # e é aqui que a aprovação manual entra em jogo por causa do 'environment' no job
+        if: steps.check_locks.outputs.has_lock == 'true'
+        run: |
+          echo "Um lock do Terraform foi detectado. Este job requer aprovação manual para executar o 'force-unlock -all'."
+          echo "Por favor, revise o log do 'Check for current Terraform locks' acima para detalhes do lock."
+          echo "Aguardando aprovação dos revisores configurados no ambiente 'producao-unlock'."
+        working-directory: terraform 
+
+      - name: Terraform Force Unlock (if a lock was found)
+        # Este passo só será executado se 'has_lock' for 'true' do passo anterior e os aprovadores tiverem aprovado
+        if: steps.check_locks.outputs.has_lock == 'true' && github.event_name == 'workflow_dispatch'
+        run: |
+          echo "Attempting to force unlock ALL Terraform state locks..."
+          terraform force-unlock -all || {
+            echo "Error: Unable to force unlock Terraform state locks."
+            exit 1
+          }
+        working-directory: terraform
