@@ -85,11 +85,11 @@ resource "azurerm_network_interface_security_group_association" "nsg_assoc" {
 }
 
 resource "azurerm_linux_virtual_machine" "vm" {
-  name                = "vm-monitoring"
-  resource_group_name = azurerm_resource_group.rg.name
-  location            = azurerm_resource_group.rg.location
-  size                = "Standard_B1s"
-  admin_username      = "azureuser"
+  name                  = "vm-monitoring"
+  resource_group_name   = azurerm_resource_group.rg.name
+  location              = azurerm_resource_group.rg.location
+  size                  = "Standard_B1s"
+  admin_username        = "azureuser"
   network_interface_ids = [azurerm_network_interface.nic.id]
 
   os_disk {
@@ -140,14 +140,14 @@ resource "azurerm_linux_virtual_machine" "vm" {
   #  "sudo ~/install.sh ${var.ngrok_token} > ~/install.log 2>&1 || (echo 'Erro no install.sh:'; cat ~/install.log; exit 1)",
   #  "bash ~/start.sh > ~/start.log 2>&1 || (echo 'Erro no start.sh:'; cat ~/start.log; exit 1)"
   #]
-#}
+  #}
 
 
 
-connection {
-  type        = "ssh"
-  user        = "azureuser"
-  private_key = var.admin_private_ssh_key
-  host        = azurerm_public_ip.public_ip.ip_address
-}
+  connection {
+    type        = "ssh"
+    user        = "azureuser"
+    private_key = var.admin_private_ssh_key
+    host        = azurerm_public_ip.public_ip.ip_address
+  }
 }
