@@ -62,11 +62,43 @@ jobs:
         run: terraform fmt -check -diff
         working-directory: terraform
 
+      # Run Checkov to perform static code analysis and security checks on Terraform code
       - name: Terraform Checkov Scan
         uses: bridgecrewio/checkov-action@v2
         with:
           directory: terraform
-          skip_checks: CKV_AZURE_123,CKV_AZURE_124,CKV_AZURE_125,CKV_AZURE_126,CKV_AZURE_127,CKV_AZURE_128,CKV_AZURE_129,CKV_AZURE_130,CKV_AZURE_131,CKV_AZURE_132,CKV_AZURE_133,CKV_AZURE_134
+          skip_checks: 
+            CKV_AZURE_123,
+            CKV_AZURE_124,
+            CKV_AZURE_125,
+            CKV_AZURE_126,
+            CKV_AZURE_127,
+            CKV_AZURE_128,
+            CKV_AZURE_129,
+            CKV_AZURE_130,
+            CKV_AZURE_131,
+            CKV_AZURE_132,
+            CKV_AZURE_133,
+            CKV_AZURE_134
+      
+      - name: Checkov Summary
+        run: |
+          if [ -f checkov_results.json ]; then
+            echo "Checkov scan completed successfully."
+            echo "Checkov results:"
+            cat checkov_results.json
+          else
+            echo "Checkov scan did not produce results."
+          fi
+        working-directory: terraform
+
+      - name: Checkov Upload Results
+        uses: bridgecrewio/checkov-action@v2
+        with:
+          directory: terraform
+          upload_results: true
+          upload_results_format: json
+          upload_results_file: checkov_results.json
 
       - name: Select or Create Workspace
         run: terraform workspace select $TERRAFORM_WORKSPACE || terraform workspace new $TERRAFORM_WORKSPACE
@@ -165,7 +197,7 @@ jobs:
         id: check_locks # ID para referenciar a saída deste passo
         # No run abaixo, estamos tentando forçar o desbloqueio e capturar a saída em um arquivo JSON. O true é para evitar falhas se não houver lock.
         # Se existir um lock, ele será capturado no arquivo JSON e posteriormente analisado para aprovação manual pelos revisores.
-        run: |
+        run: |-
           terraform force-unlock -json -force -lock-id="" || true > terraform_lock_output.json 2>&1
           if [ -s terraform_lock_output.json ] && grep -q 'ID' terraform_lock_output.json; then
             echo "::set-output name=has_lock::true"
