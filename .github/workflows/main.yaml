@@ -70,7 +70,6 @@ jobs:
             -var="client_secret=${{ secrets.CLIENT_SECRET }}" \
             -var="tenant_id=${{ secrets.TENANT_ID }}" \
             -var="subscription_id=${{ secrets.SUBSCRIPTION_ID }}" \
-            -var="ngrok_token=${{ secrets.NGROK_AUTHTOKEN }}" \
             -var="admin_public_ssh_key=${{ secrets.ADMIN_PUBLIC_SSH_KEY }}" \
             -var="admin_private_ssh_key=${{ secrets.ADMIN_PRIVATE_SSH_KEY }}" \
             -out=tfplan
@@ -119,7 +118,6 @@ jobs:
             -var="client_secret=${{ secrets.CLIENT_SECRET }}" \
             -var="tenant_id=${{ secrets.TENANT_ID }}" \
             -var="subscription_id=${{ secrets.SUBSCRIPTION_ID }}" \
-            -var="ngrok_token=${{ secrets.NGROK_AUTHTOKEN }}" \
             -var="admin_public_ssh_key=${{ secrets.ADMIN_PUBLIC_SSH_KEY }}" \
             -var="admin_private_ssh_key=${{ secrets.ADMIN_PRIVATE_SSH_KEY }}"
         working-directory: terraform
