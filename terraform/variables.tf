@@ -19,22 +19,15 @@ variable "virtual_network_name" {
   default     = "vnet-devops"
 }
 
-# Senha do usuário admin da VM. Deve ser fornecida via variável segura no pipeline
-#variable "admin_password" {
-#  description = "Senha do usuário admin"
-#  type        = string
-#  sensitive   = true
-#}
-
-# Dados de autenticação do Azure, vindos do Service Principal
-
 variable "subscription_id" {
   description = "ID da sua assinatura Azure"
+  sensitive   = true
   type        = string
 }
 
 variable "client_id" {
   description = "Client ID do Service Principal"
+  sensitive   = true
   type        = string
 }
 
@@ -48,12 +41,6 @@ variable "tenant_id" {
   description = "Tenant ID do Azure AD"
   type        = string
 }
-
-#variable "ngrok_token" {
-#  description = "ngrok auth token"
-#  type        = string
-#  sensitive   = true
-#}
 
 variable "admin_private_ssh_key" {
   description = "Chave SSH Privada do usuário admin"
