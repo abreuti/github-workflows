@@ -9,6 +9,11 @@ on:
 jobs:
   repofix:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write 
+      issues: write  
+
     steps:
       - name: Run RepoFixAI
         uses: Manav916/llm-code-review@main
