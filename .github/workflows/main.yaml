@@ -55,6 +55,13 @@ jobs:
         run: terraform init
         working-directory: terraform
 
+      - name: Terraform Format Check
+        # O '-check' faz com que o comando retorne um erro (exit code != 0)
+        # se o código não estiver formatado corretamente.
+        # O '-diff' mostra as diferenças, tornando o erro mais claro no log.
+        run: terraform fmt -check -diff
+        working-directory: terraform
+
       - name: Select or Create Workspace
         run: terraform workspace select $TERRAFORM_WORKSPACE || terraform workspace new $TERRAFORM_WORKSPACE
         working-directory: terraform
